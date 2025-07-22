@@ -1,1 +1,10 @@
+__pycache__/
+*.py[cod]
+*.zip
+*.csv
+*.log
+*.sqlite
 local_storage/
+.env
+*.env
+.DS_Store
