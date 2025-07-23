@@ -18,4 +18,4 @@ COPY . .
 RUN mkdir -p local_storage/zip local_storage/csv
 
 # Executa o script com parâmetro opcional
-CMD ["python", "extract/extract.py"]
+ENTRYPOINT ["python", "extract/extract.py"]
