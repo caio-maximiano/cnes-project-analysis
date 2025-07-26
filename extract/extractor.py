@@ -20,6 +20,7 @@ class Extractor:
 
         self.account_name = "caiostorageaccountdev"
         self.account_key = "IExmwuvHY7HX2rYSouaQAhAEjFrXYMfGpKIKFFMAVlz8B5rOn8/wQX8Np7yXGQSgneFel74yDwq7+AStvLQjJQ=="  # ⚠️ Use env variable for security
+        self.account_key = os.environ["AZURE_STORAGE_KEY"]
         self.file_system_name = "bronze"
 
         self.datalake_target_path = f"cnes/{self.year_month}"
@@ -64,7 +65,7 @@ class Extractor:
                         file_client.upload_data(
                             data,
                             overwrite=True,
-                            max_concurrency=4,
+                            max_concurrency=8,
                             chunk_size=4 * 1024 * 1024
                         )
         print("Upload completed successfully.")

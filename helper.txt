@@ -1,0 +1,3 @@
+docker build -t cnes-pipeline .
+docker run cnes-pipeline --year_month 202406
+docker run -it   --name cnes-pipeline-test   -e AZURE_STORAGE_KEY="IExmwuvHY7HX2rYSouaQAhAEjFrXYMfGpKIKFFMAVlz8B5rOn8/wQX8Np7yXGQSgneFel74yDwq7+AStvLQjJQ=="   cnes-pipeline --year_month 202406

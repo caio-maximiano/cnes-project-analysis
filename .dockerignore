@@ -1,0 +1,12 @@
+# Ignorar arquivos temporários e de saída
+__pycache__/
+*.pyc
+*.pyo
+*.zip
+*.csv
+*.log
+*.sqlite
+
+# Ignorar diretórios locais
+local_storage/
+.env
