@@ -5,7 +5,8 @@ from azure.storage.filedatalake import DataLakeServiceClient
 import zipfile
 import requests
 import shutil
-
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 class Extractor:
     """
@@ -28,12 +29,20 @@ class Extractor:
         self.download_url = f"https://cnes.datasus.gov.br/EstatisticasServlet?path=BASE_DE_DADOS_CNES_{self.year_month}.ZIP"
 
     def download_zip(self):
+
         os.makedirs(os.path.dirname(self.local_zip_path), exist_ok=True)
         print(f"Starting File Download: {self.download_url}")
-        response = requests.get(self.download_url, timeout=(15, 300))
+
+        session = requests.Session()
+        retries = Retry(total=5, backoff_factor=5, status_forcelist=[429, 500, 502, 503, 504])
+        session.mount("https://", HTTPAdapter(max_retries=retries))
+
+        response = session.get(self.download_url, timeout=(15, 300))
         response.raise_for_status()
+
         with open(self.local_zip_path, "wb") as f:
             f.write(response.content)
+
         print(f"Download completed: {self.local_zip_path}")
 
     def extract_zip(self):
