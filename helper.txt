@@ -1,3 +1,160 @@
 docker build -t cnes-pipeline .
+docker build --platform linux/amd64 -t cnes-pipeline . (Por conta de ser MAC, precisei deletar o container criado com az container delete --resource-group projeto-mba --name cnes-pipeline --yes
+
+# E recrie com o mesmo comando `az container create` que você usou antes
+)
 docker run cnes-pipeline --year_month 202406
-docker run -it   --name cnes-pipeline-test   -e AZURE_STORAGE_KEY="IExmwuvHY7HX2rYSouaQAhAEjFrXYMfGpKIKFFMAVlz8B5rOn8/wQX8Np7yXGQSgneFel74yDwq7+AStvLQjJQ=="   cnes-pipeline --year_month 202406
+docker run -it   --name cnes-pipeline   -e AZURE_STORAGE_KEY="IExmwuvHY7HX2rYSouaQAhAEjFrXYMfGpKIKFFMAVlz8B5rOn8/wQX8Np7yXGQSgneFel74yDwq7+AStvLQjJQ=="   cnes-pipeline --year_month 202406
+
+
+
+Criando recursos na azure 
+1 - az login --tenant 37fc5b05-ce95-4708-a740-240ca3b8af92 --use-device-code
+
+2 - az group create \
+        --name projeto-mba \
+        --location eastus
+
+    {
+    "id": "/subscriptions/1d114aa5-34ae-43fb-aaba-baedaa8e9448/resourceGroups/projeto-mba",
+    "location": "eastus",
+    "managedBy": null,
+    "name": "projeto-mba",
+    "properties": {
+        "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+    }
+
+3 - az acr create \
+        --resource-group projeto-mba \
+        --name projetombaacr \
+        --sku Basic \
+        --admin-enabled true \
+        --location eastus
+
+    Resource provider 'Microsoft.ContainerRegistry' used by this operation is not registered. We are registering for you.
+    Registration succeeded.
+    {
+    "adminUserEnabled": true,
+    "anonymousPullEnabled": false,
+    "creationDate": "2025-07-26T16:35:36.830482+00:00",
+    "dataEndpointEnabled": false,
+    "dataEndpointHostNames": [],
+    "encryption": {
+        "keyVaultProperties": null,
+        "status": "disabled"
+    },
+    "id": "/subscriptions/1d114aa5-34ae-43fb-aaba-baedaa8e9448/resourceGroups/projeto-mba/providers/Microsoft.ContainerRegistry/registries/projetombaacr",
+    "identity": null,
+    "location": "eastus",
+    "loginServer": "projetombaacr.azurecr.io",
+    "metadataSearch": "Disabled",
+    "name": "projetombaacr",
+    "networkRuleBypassOptions": "AzureServices",
+    "networkRuleSet": null,
+    "policies": {
+        "azureAdAuthenticationAsArmPolicy": {
+        "status": "enabled"
+        },
+        "exportPolicy": {
+        "status": "enabled"
+        },
+        "quarantinePolicy": {
+        "status": "disabled"
+        },
+        "retentionPolicy": {
+        "days": 7,
+        "lastUpdatedTime": "2025-07-26T16:35:44.305611+00:00",
+        "status": "disabled"
+        },
+        "softDeletePolicy": {
+        "lastUpdatedTime": "2025-07-26T16:35:44.305661+00:00",
+        "retentionDays": 7,
+        "status": "disabled"
+        },
+        "trustPolicy": {
+        "status": "disabled",
+        "type": "Notary"
+        }
+    },
+    "privateEndpointConnections": [],
+    "provisioningState": "Succeeded",
+    "publicNetworkAccess": "Enabled",
+    "resourceGroup": "projeto-mba",
+    "sku": {
+        "name": "Basic",
+        "tier": "Basic"
+    },
+    "status": null,
+    "systemData": {
+        "createdAt": "2025-07-26T16:35:36.830482+00:00",
+        "createdBy": "caiomax97@hotmail.com",
+        "createdByType": "User",
+        "lastModifiedAt": "2025-07-26T16:35:36.830482+00:00",
+        "lastModifiedBy": "caiomax97@hotmail.com",
+        "lastModifiedByType": "User"
+    },
+    "tags": {},
+    "type": "Microsoft.ContainerRegistry/registries",
+    "zoneRedundancy": "Disabled"
+    }
+
+4 - az acr login --name projetombaacr
+5 - docker tag cnes-pipeline projetombaacr.azurecr.io/cnes-pipeline:latest
+6 - docker push projetombaacr.azurecr.io/cnes-pipeline:latest
+    The push refers to repository [projetombaacr.azurecr.io/cnes-pipeline]
+    0ebd799af9ca: Pushed 
+    bda44d8aae8d: Pushed 
+    ace1c7cc114f: Pushed 
+    946ae539d7f3: Pushed 
+    ff4d7aa68ac0: Pushed 
+    16cc4c7d5d83: Pushed 
+    329cb79996ca: Pushed 
+    e26286284f6e: Pushed 
+    dd97e58b4e81: Pushed 
+    latest: digest: sha256:7fad4888f27b50360ead620cdbdf8407b3b90c656eca017102a07aa088db758c size: 2204
+7 - az acr credential show --name projetombaacr
+    {
+    "passwords": [
+        {
+        "name": "password",
+        "value": "pPBLJ2EQLGVfP9qPRgdw1Tdsg7b7Q/or6jWHN8b0rf+ACRBqr+xd"
+        },
+        {
+        "name": "password2",
+        "value": "g2RYzFuWJJeEZvOjd5zzJXEwIv9gf+x1jj8hUxGpXh+ACRBUKxQM"
+        }
+    ],
+    "username": "projetombaacr"
+}
+
+8 - az container create \
+  --resource-group projeto-mba \
+  --name cnes-pipeline \
+  --image projetombaacr.azurecr.io/cnes-pipeline:latest \
+  --registry-login-server projetombaacr.azurecr.io \
+  --registry-username projetombaacr \
+  --registry-password pPBLJ2EQLGVfP9qPRgdw1Tdsg7b7Q/or6jWHN8b0rf+ACRBqr+xd \
+  --environment-variables AZURE_STORAGE_KEY="/ae47eZuE0NGPopxVHEkxOKsQwtEm3qQM0vBRPBRbB5nAW1zO6FPkEO9gwNQwkqExaVhOyHWgb68+AStIau+Uw==" \
+  --command-line "python extract/extract.py --year_month 202406" \
+  --cpu 1 \
+  --memory 1.5 \
+  --os-type Linux \
+  --restart-policy Never
+
+9 - az provider register --namespace Microsoft.ContainerInstance
+    OBS: Por conta desse erro -> (MissingSubscriptionRegistration) The subscription is not registered to use namespace 'Microsoft.ContainerInstance'. See https://aka.ms/rps-not-found for how to register subscriptions.
+Code: MissingSubscriptionRegistration
+
+
+
+
+Durante o desenvolviment e ajustes
+- docker build --platform linux/amd64 -t cnes-pipeline .
+- docker tag cnes-pipeline projetombaacr.azurecr.io/cnes-pipeline:latest
+- docker push projetombaacr.azurecr.io/cnes-pipeline:latest
+
+- az container delete --resource-group projeto-mba --name cnes-pipeline --yes
+- <comando para criar>

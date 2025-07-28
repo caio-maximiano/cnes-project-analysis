@@ -18,20 +18,19 @@ class Extractor:
         else:
             self.year_month = (datetime.today() - relativedelta(months=months_back)).strftime("%Y%m")
 
-        self.account_name = "caiostorageaccountdev"
-        self.account_key = "IExmwuvHY7HX2rYSouaQAhAEjFrXYMfGpKIKFFMAVlz8B5rOn8/wQX8Np7yXGQSgneFel74yDwq7+AStvLQjJQ=="  # ⚠️ Use env variable for security
+        self.account_name = "cnesstorage"
         self.account_key = os.environ["AZURE_STORAGE_KEY"]
         self.file_system_name = "bronze"
 
-        self.datalake_target_path = f"cnes/{self.year_month}"
+        self.datalake_target_path = f"/{self.year_month}"
         self.local_zip_path = f"./local_storage/zip/BASE_DE_DADOS_CNES_{self.year_month}.ZIP"
         self.local_extract_dir = f"./local_storage/csv/cnes_extract_{self.year_month}"
         self.download_url = f"https://cnes.datasus.gov.br/EstatisticasServlet?path=BASE_DE_DADOS_CNES_{self.year_month}.ZIP"
 
     def download_zip(self):
         os.makedirs(os.path.dirname(self.local_zip_path), exist_ok=True)
-        print(f"Downloading file: {self.download_url}")
-        response = requests.get(self.download_url)
+        print(f"Starting File Download: {self.download_url}")
+        response = requests.get(self.download_url, timeout=(15, 300))
         response.raise_for_status()
         with open(self.local_zip_path, "wb") as f:
             f.write(response.content)
@@ -80,8 +79,6 @@ class Extractor:
         if os.path.exists(self.local_extract_dir):
             shutil.rmtree(self.local_extract_dir)
             print(f"Removed extracted folder: {self.local_extract_dir}")
-
-
 
 if __name__ == "__main__":
     extractor = Extractor()

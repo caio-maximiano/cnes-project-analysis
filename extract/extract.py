@@ -15,6 +15,7 @@ def main():
     extractor.download_zip()
     extractor.extract_zip()
     extractor.upload_to_datalake()
+    extractor.cleanup()
 
 if __name__ == "__main__":
     main()

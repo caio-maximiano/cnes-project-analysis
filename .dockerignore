@@ -10,3 +10,4 @@ __pycache__/
 # Ignorar diretórios locais
 local_storage/
 .env
+helper.txt
