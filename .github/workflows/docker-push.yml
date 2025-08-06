@@ -24,5 +24,8 @@ jobs:
       - name: Tag image
         run: docker tag cnes-pipeline projetombaacr.azurecr.io/cnes-pipeline:latest
 
+      - name: Azure ACR Login via CLI
+        run: az acr login --name projetombaacr
+
       - name: Push image to ACR
         run: docker push projetombaacr.azurecr.io/cnes-pipeline:latest
