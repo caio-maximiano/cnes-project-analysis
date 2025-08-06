@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Login to Azure
@@ -19,7 +19,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS_PUSH_ACR }}
 
       - name: Build Docker image
-        run: docker build -t cnes-pipeline .
+        run: docker build --platform linux/amd64 -t cnes-pipeline .
 
       - name: Tag image
         run: docker tag cnes-pipeline projetombaacr.azurecr.io/cnes-pipeline:latest
