@@ -158,3 +158,27 @@ Durante o desenvolviment e ajustes
 
 - az container delete --resource-group projeto-mba --name cnes-pipeline --yes
 - <comando para criar>
+
+
+
+
+rodei esse comando para criar os secrets e colar no github
+az ad sp create-for-rbac \
+  --name github-cnes-pipeline \
+  --scopes $(az acr show --name projetombaacr --query id --output tsv) \
+  --role acrpush \
+  --sdk-auth
+
+  retornou isso:
+  {
+  "clientId": "43d10a20-de62-4439-80bd-dd58d2be1cb0",
+  "clientSecret": "iqd8Q~KIeYSy6qbJjDXkfYaauWbRU1XYzDcmfaeu",
+  "subscriptionId": "1d114aa5-34ae-43fb-aaba-baedaa8e9448",
+  "tenantId": "37fc5b05-ce95-4708-a740-240ca3b8af92",
+  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+  "resourceManagerEndpointUrl": "https://management.azure.com/",
+  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+  "galleryEndpointUrl": "https://gallery.azure.com/",
+  "managementEndpointUrl": "https://management.core.windows.net/"
+}
