@@ -3,3 +3,7 @@ ipykernel
 pandas
 python-dateutil
 pytest
+pandasql
+unicode
+matplotlib
+scikit-learn
