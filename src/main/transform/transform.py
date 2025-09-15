@@ -1,7 +1,6 @@
 import argparse
 from transformer import Transformer
 
-
 def main():
     parser = argparse.ArgumentParser(description="Curate CNES tables and upload to Azure Data Lake")
     parser.add_argument(
@@ -11,6 +10,7 @@ def main():
     )
     args = parser.parse_args()
 
+    list_dates = [202201, 202202, 202203, 202204,202205, 202206, args.year_month]
     transformer = Transformer(year_month=args.year_month)
     transformer.run()
 
