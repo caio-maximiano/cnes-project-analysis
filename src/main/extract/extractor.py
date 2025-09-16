@@ -20,7 +20,7 @@ class Extractor:
             self.year_month = (datetime.today() - relativedelta(months=months_back)).strftime("%Y%m")
 
         self.account_name = "cnesstorage"
-        self.account_key = os.environ["AZURE_STORAGE_KEY"]
+        self.account_key = "/ae47eZuE0NGPopxVHEkxOKsQwtEm3qQM0vBRPBRbB5nAW1zO6FPkEO9gwNQwkqExaVhOyHWgb68+AStIau+Uw=="#os.environ["AZURE_STORAGE_KEY"]
         self.file_system_name = "bronze"
 
         self.datalake_target_path = f"/{self.year_month}"
