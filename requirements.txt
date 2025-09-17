@@ -7,3 +7,6 @@ pandasql
 unicode
 matplotlib
 scikit-learn
+plotly
+# dataprep 
+seaborn
