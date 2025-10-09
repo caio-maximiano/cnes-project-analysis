@@ -7,6 +7,18 @@ import requests
 import shutil
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+import subprocess, shlex
+
+# --- Defina o verificador SSL global aqui ---
+try:
+    import truststore
+    truststore.inject_into_ssl()
+    _VERIFY = True   # usa Keychain do macOS
+    print("✅ Using macOS truststore")
+except ImportError:
+    _VERIFY = certifi.where()  # usa bundle do certifi
+    print(f"⚠️ Using certifi: {_VERIFY}")
+# --------------------------------------------
 
 class Extractor:
     """
@@ -19,8 +31,8 @@ class Extractor:
         else:
             self.year_month = (datetime.today() - relativedelta(months=months_back)).strftime("%Y%m")
 
-        self.account_name = "cnesstorage"
-        self.account_key = "/ae47eZuE0NGPopxVHEkxOKsQwtEm3qQM0vBRPBRbB5nAW1zO6FPkEO9gwNQwkqExaVhOyHWgb68+AStIau+Uw=="#os.environ["AZURE_STORAGE_KEY"]
+        self.account_name = "cnesstorageaccount"
+        self.account_key = "cP1htVg+Qtmzi+4dJKz0qEDb1c7uHu3f5VuDWK8/RV2FP/6Qa5GJzT7q2jcGLVvUfwpC3UaFbTEY+ASt38FW+A=="#os.environ["AZURE_STORAGE_KEY"]
         self.file_system_name = "bronze"
 
         self.datalake_target_path = f"/{self.year_month}"
@@ -29,7 +41,6 @@ class Extractor:
         self.download_url = f"https://cnes.datasus.gov.br/EstatisticasServlet?path=BASE_DE_DADOS_CNES_{self.year_month}.ZIP"
 
     def download_zip(self):
-
         os.makedirs(os.path.dirname(self.local_zip_path), exist_ok=True)
         print(f"Starting File Download: {self.download_url}")
 
@@ -37,13 +48,20 @@ class Extractor:
         retries = Retry(total=5, backoff_factor=5, status_forcelist=[429, 500, 502, 503, 504])
         session.mount("https://", HTTPAdapter(max_retries=retries))
 
-        response = session.get(self.download_url, timeout=(15, 300))
-        response.raise_for_status()
-
-        with open(self.local_zip_path, "wb") as f:
-            f.write(response.content)
-
-        print(f"Download completed: {self.local_zip_path}")
+        try:
+            # importante: stream=True e verify=_VERIFY
+            with session.get(self.download_url, timeout=(15, 300), stream=True, verify=_VERIFY) as r:
+                r.raise_for_status()
+                with open(self.local_zip_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=1024 * 1024):
+                        if chunk:
+                            f.write(chunk)
+            print(f"Download completed: {self.local_zip_path}")
+        except requests.exceptions.SSLError as e:
+            print(f"[TLS] Falha com requests ({e}); tentando via curl (trust store do sistema).")
+            cmd = f'curl -L --fail --retry 5 --retry-delay 5 -o "{self.local_zip_path}" "{self.download_url}"'
+            subprocess.run(shlex.split(cmd), check=True)
+            print(f"Download concluído via curl: {self.local_zip_path}")
 
     def extract_zip(self):
         os.makedirs(self.local_extract_dir, exist_ok=True)

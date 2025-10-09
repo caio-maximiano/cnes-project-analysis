@@ -21,9 +21,9 @@ class Transformer:
             ).strftime("%Y%m")
 
         # ---- Configuração do Data Lake (use variável de ambiente para a chave) ----
-        self.account_name = "cnesstorage"
+        self.account_name = "cnesstorageaccount"
         # export AZURE_STORAGE_KEY='...'
-        self.account_key = "/ae47eZuE0NGPopxVHEkxOKsQwtEm3qQM0vBRPBRbB5nAW1zO6FPkEO9gwNQwkqExaVhOyHWgb68+AStIau+Uw=="  # os.environ.get("AZURE_STORAGE_KEY")
+        self.account_key = "cP1htVg+Qtmzi+4dJKz0qEDb1c7uHu3f5VuDWK8/RV2FP/6Qa5GJzT7q2jcGLVvUfwpC3UaFbTEY+ASt38FW+A=="  # os.environ.get("AZURE_STORAGE_KEY")
         if not self.account_key:
             raise RuntimeError(
                 "AZURE_STORAGE_KEY não definida no ambiente. "
