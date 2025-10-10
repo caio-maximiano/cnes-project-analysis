@@ -9,7 +9,7 @@ def main():
         help="Optional year and month in YYYYMM format. If not provided, defaults to 3 months ago.",
     )
     args = parser.parse_args()
-
+    #i did this for a full load in the past
     list_dates = [202201, 202202, 202203, 202204,202205, 202206, args.year_month]
     transformer = Transformer(year_month=args.year_month)
     transformer.run()

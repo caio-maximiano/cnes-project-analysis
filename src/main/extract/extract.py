@@ -11,6 +11,7 @@ def main():
 
     args = parser.parse_args()
     
+    #i did this for a full load in the past
     list_year = ["2020","2021", "2022", "2023", "2024", "2025"]
     list_month = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
     if not args.year_month:

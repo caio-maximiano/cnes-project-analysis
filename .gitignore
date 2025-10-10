@@ -9,3 +9,4 @@ local_storage/
 *.env
 .DS_Store
 .pytest_cache/
+src/cnes_etl.egg-info/
