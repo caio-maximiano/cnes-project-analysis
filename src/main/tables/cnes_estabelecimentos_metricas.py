@@ -79,19 +79,6 @@ def _add_time_keys(df: pd.DataFrame, ym_col: str = "year_month") -> pd.DataFrame
     return df
 
 
-def _add_municipio_sem_digito(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Gera CO_MUNICIPIO_SEM_DIGITO removendo um dígito final quando houver (divide por 10),
-    preservando nulos.
-    """
-    df = df.copy()
-    if "CO_MUNICIPIO" not in df.columns:
-        raise KeyError("esperado 'CO_MUNICIPIO' em estabelecimentos")
-    s = pd.to_numeric(df["CO_MUNICIPIO"], errors="coerce")
-    df["CO_MUNICIPIO_SEM_DIGITO"] = (s // 10).astype("Int64")
-    return df
-
-
 def _read_parquet(storage, remote_path: str, columns: Optional[List[str]] = None) -> pd.DataFrame:
     raw = storage.download_file(remote_path)
     return pd.read_parquet(io.BytesIO(raw), engine="pyarrow", columns=columns)
@@ -137,7 +124,7 @@ class CNESEstabelecimentosSPMetricas:
         out = pd.concat(dfs, ignore_index=True)
         out = _cast_estab_types(out)
         out = _add_time_keys(out, ym_col="year_month")
-        out = _add_municipio_sem_digito(out)
+        out = out.rename(columns={"CO_MUNICIPIO": "CO_MUNICIPIO_SEM_DIGITO"})
         return out
 
 
@@ -190,12 +177,21 @@ class CNESEstabelecimentosSPMetricas:
             MM
         """
         g = ps.sqldf(query, locals())
-        schema = g.columns.to_series().map(type)
+
+        #Deixando as chaves no formato correto
+        g["CO_MUNICIPIO_SEM_DIGITO"] = pd.to_numeric(g["CO_MUNICIPIO_SEM_DIGITO"], errors="coerce").astype("Int64")
+        g["YYYY"] = pd.to_numeric(g["YYYY"], errors="coerce").astype("Int16")
+        g["MM"] = pd.to_numeric(g["MM"], errors="coerce").astype("Int16")
+
+        pop["CO_MUNICIPIO_SEM_DIGITO"] = pd.to_numeric(pop["CO_MUNICIPIO_SEM_DIGITO"], errors="coerce").astype("Int64")
+        pop["YYYY"] = pd.to_numeric(pop["YYYY"], errors="coerce").astype("Int16")
+        pop["MM"] = pd.to_numeric(pop["MM"], errors="coerce").astype("Int16")
+
         print("schema de g (após groupby):")
-        print(schema)
-        schema = pop.columns.to_series().map(type)
+        print(g.dtypes)
         print("schema de pop (população):")
-        print(schema)
+        print(pop.dtypes)
+
         # join com população
         join_keys = ["CO_MUNICIPIO_SEM_DIGITO", "YYYY", "MM"]
         df = g.merge(
@@ -207,28 +203,34 @@ class CNESEstabelecimentosSPMetricas:
 
         # métrica final
         df["PROFISSIONAIS_POR_1000"] = (df["TOTAL_PROFISSIONAIS"] / df["POPULACAO_MENSAL"]) * 1000
-
-        # recria partição YYYYMM para escrita
-        df["year_month"] = df["YYYY"].astype(str) + df["MM"].astype(str)
-
-        # ordena e tipos
-        df = df.sort_values(["year_month", "CO_MUNICIPIO_SEM_DIGITO", "DS_ATIVIDADE_PROFISSIONAL"]).reset_index(drop=True)
-
+        
         return df
 
     # ---------- escrita ----------
     def run(self, ctx: TableContext) -> None:
         df = self.definition(ctx)
+        table_name = getattr(self, "_table_name", self.__class__.__name__)
 
+        # garante pasta local
+        ctx.local_dir.mkdir(parents=True, exist_ok=True)
+
+        # caminho local temporário
+        local = ctx.local_dir / f"{table_name}.parquet"
+
+        # salva o DataFrame em Parquet
+        df.to_parquet(local, index=False, engine="pyarrow", compression="snappy")
+
+        # caminho no GOLD (um único arquivo)
+        remote = f"metricas/{table_name}/data.parquet"
+
+        # upload (sobrescreve)
+        ctx.gold.upload_file(local, remote, overwrite=True)
+
+        
         # escreve uma partição por YYYYMM
-        out_prefix = "metricas/estabelecimentos_sp"
-        for ym, part in df.groupby("year_month", sort=True):
-            local = ctx.local_dir / f"metricas_estabelecimentos_sp_{ym}.parquet"
-            part.to_parquet(local, index=False, engine="pyarrow", compression="snappy")
-            remote = f"{out_prefix}/year_month={ym}/data.parquet"
-            ctx.gold.upload_file(local, remote)
-
-        gold = ctx.gold
-        raw = gold.download_file("metricas/estabelecimentos_sp/year_month=202212/data.parquet")
-        df = pd.read_parquet(io.BytesIO(raw), engine="pyarrow")
-        df.head(3)
+        # out_prefix = "metricas/estabelecimentos_sp"
+        # for ym, part in df.groupby("year_month", sort=True):
+        #     local = ctx.local_dir / f"metricas_estabelecimentos_sp_{ym}.parquet"
+        #     part.to_parquet(local, index=False, engine="pyarrow", compression="snappy")
+        #     remote = f"{out_prefix}/year_month={ym}/data.parquet"
+        #     ctx.gold.upload_file(local, remote)
