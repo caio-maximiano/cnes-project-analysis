@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cnes-pipeline"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src/main"]
+
+[project.scripts]
+cnes-tables = "cli.run_tables:main"
+cnes-extract = "cli.run_extract:main"
