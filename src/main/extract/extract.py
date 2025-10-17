@@ -1,38 +1,39 @@
+from __future__ import annotations
+
 import argparse
-from extractor import Extractor
+from .extractor import Extractor
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Download, extract, and upload CNES data")
+    parser = argparse.ArgumentParser(description="Download, extract, and upload CNES data to ADLS (bronze)")
+    parser.add_argument("--year_month", type=str, help="YYYYMM; se vazio, usa (hoje - 3 meses).")
     parser.add_argument(
-        "--year_month",
-        type=str,
-        help="Optional year and month in YYYYMM format. If not provided, defaults to 3 months ago."
+        "--all",
+        action="store_true",
+        help="Processa todos os meses de 2020..2025 (cuidado: operação longa).",
     )
-
     args = parser.parse_args()
-    
-    list_year = ["2020","2021", "2022", "2023", "2024", "2025"]
-    list_month = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-    if not args.year_month:
-        for year in list_year:
-            for month in list_month:
-                extractor = Extractor(year_month=f"{year}{month}")
-                extractor.download_zip()
-                extractor.extract_zip()
-                extractor.upload_to_datalake()
-        extractor.cleanup()
-    else:
-        extractor = Extractor(year_month=args.year_month)
-        extractor.download_zip()
-        extractor.extract_zip()
-        extractor.upload_to_datalake()
-        extractor.cleanup()
 
-    # extractor = Extractor(year_month=args.year_month)
-    # extractor.download_zip()
-    # extractor.extract_zip()
-    # extractor.upload_to_datalake()
-    # extractor.cleanup()
+    if args.all:
+        years = [str(y) for y in range(2020, 2026)]
+        months = [f"{m:02d}" for m in range(1, 13)]
+        for y in years:
+            for m in months:
+                ym = f"{y}{m}"
+                e = Extractor(year_month=ym)
+                e.download_zip()
+                e.extract_zip()
+                e.upload_to_datalake()
+                e.cleanup()
+        return
+
+    # Caso padrão: um único YYYYMM (ou 3 meses atrás)
+    e = Extractor(year_month=args.year_month)
+    e.download_zip()
+    e.extract_zip()
+    e.upload_to_datalake()
+    e.cleanup()
+
 
 if __name__ == "__main__":
     main()

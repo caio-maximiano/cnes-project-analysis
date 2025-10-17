@@ -1,0 +1,3 @@
+[console_scripts]
+cnes-extract = cli.run_extract:main
+cnes-tables = cli.run_tables:main
