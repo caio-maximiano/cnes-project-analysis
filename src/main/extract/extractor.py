@@ -13,12 +13,14 @@ import subprocess, shlex
 try:
     import truststore
     truststore.inject_into_ssl()
-    _VERIFY = True   # usa Keychain do macOS
-    print("✅ Using macOS truststore")
+    _VERIFY = True
+    if __name__ == "__main__":
+        print("✅ Using macOS truststore")
 except ImportError:
-    _VERIFY = certifi.where()  # usa bundle do certifi
-    print(f"⚠️ Using certifi: {_VERIFY}")
-# --------------------------------------------
+    import certifi
+    _VERIFY = certifi.where()
+    if __name__ == "__main__":
+        print(f"⚠️ Using certifi: {_VERIFY}")
 
 class Extractor:
     """
