@@ -1,8 +1,11 @@
 from datetime import date
 import pandas as pd
-from main.core.layers.silver import Silver  # ajuste o import conforme seu projeto
+from src.main.core.layers.silver import Silver
 
 class CnesEstabelecimentos(Silver):
+    
+    job_type = "table"
+
     def __init__(self, year_month: str):
         super().__init__(name="cnes_estabelecimentos")
         self.year_month = year_month

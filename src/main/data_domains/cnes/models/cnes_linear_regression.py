@@ -1,14 +1,15 @@
 # src/main/data_domains/cnes/models/cnes_linear_regression.py
-from main.core.layers.models import Model
+from src.main.core.layers.models import Model
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 
-from core.layers.models import Model
-
 class CnesLinearRegression(Model):
+
+    job_type = "model"
+    
     def __init__(self, artifact_name: str = "cnes_linear_regression"):
         super().__init__(artifact_name)
 

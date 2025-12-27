@@ -1,7 +1,7 @@
 import io
 import pandas as pd
-from ..infra.table import Table
-from ..infra.storage import bronze, silver as silver_store
+from src.main.core.infra.table import Table
+from src.main.core.infra.storage import bronze, silver as silver_store
 
 class Silver(Table):
     layer = "silver"

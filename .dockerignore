@@ -11,3 +11,35 @@ __pycache__/
 local_storage/
 .env
 helper.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# Local data
+local_storage/
+*.zip
+*.csv
+*.parquet
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Docs / extras
+README.md
+exploration/
+helper.txt
+docker-compose.yml

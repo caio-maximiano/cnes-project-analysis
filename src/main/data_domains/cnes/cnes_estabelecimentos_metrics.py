@@ -1,10 +1,12 @@
-from main.core.layers.gold import Gold
+from src.main.core.layers.gold import Gold
 from datetime import date
 import pandas as pd
 import pandasql as ps
 
 
 class CnesEstabelecimentosMetrics(Gold):
+    job_type = "table"
+    
     def __init__(self, year_month: str = "all"):
         super().__init__(name="cnes_estabelecimentos_metrics")
         self.year_month = year_month

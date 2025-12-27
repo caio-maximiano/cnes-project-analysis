@@ -2,8 +2,8 @@ import io
 import re
 import pandas as pd
 from typing import List, Tuple
-from ..infra.table import Table
-from ..infra.storage import silver as silver_store, gold as gold_store
+from src.main.core.infra.table import Table
+from src.main.core.infra.storage import silver as silver_store, gold as gold_store
 
 class Gold(Table):
     layer = "gold"
