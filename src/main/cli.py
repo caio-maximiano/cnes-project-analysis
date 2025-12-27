@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 import inspect
 from typing import Any, Dict
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
 from .data_domains.registry import list_jobs, get_job
 from .extract.extractor import Extractor
@@ -69,6 +71,62 @@ def cmd_extract(args):
     ex.cleanup()
     print(f"✓ Bronze concluído para {ex.year_month}.")
 
+def cmd_pipeline(args):
+    """
+    Pipeline completo:
+    - extract (bronze)
+    - tables (silver/gold)
+    - models (artifacts)
+    """
+
+    # -------- resolver meses --------
+    if args.year_month:
+        year_months = [args.year_month]
+    else:
+        today = date.today().replace(day=1)
+        year_months = [
+            (today - relativedelta(months=i)).strftime("%Y%m")
+            for i in range(args.months_back)
+        ]
+        year_months.reverse()  # roda do mais antigo → mais novo
+
+    # -------- 1. extract --------
+    for ym in year_months:
+        ex = Extractor(year_month=ym)
+        print(f"→ [1/3] Extraindo CNES para {ym} …")
+        ex.download_zip()
+        ex.extract_zip()
+        ex.upload_to_datalake()
+        ex.cleanup()
+        print(f"✓ Bronze concluído para {ym}.\n")
+
+    # -------- 2. tables --------
+    print("→ [2/3] Atualizando tabelas (silver/gold) …")
+    jobs = list_jobs()
+
+    for ym in year_months:
+        print(f"\n→ Processando tabelas para {ym}")
+        for name, JobCls in jobs.items():
+            if getattr(JobCls, "job_type", None) != "table":
+                continue
+
+            print(f"  • {name}")
+            JobCls(year_month=ym).run()
+
+    print("\n✓ Tabelas atualizadas.\n")
+
+    # -------- 3. models --------
+    print("→ [3/3] Treinando modelos e salvando artefatos …")
+
+    for name, JobCls in jobs.items():
+        if getattr(JobCls, "job_type", None) != "model":
+            continue
+
+        print(f"  • {name}")
+        kwargs = _build_kwargs_for(JobCls, args)
+        JobCls(**kwargs).run()
+
+    print("\n✓ Pipeline completo executado com sucesso.")
 
 # ------------ parser ------------
 def build_parser():
@@ -98,10 +156,21 @@ def build_parser():
     p_extract.add_argument("--months-back", type=int, default=3, help="Meses para trás quando --year-month não for passado (default: 3)")
     p_extract.set_defaults(func=cmd_extract)
 
+    # main pipeline [--year-month YYYYMM | --months-back N] [--artifact-name foo.joblib]
+    p_pipeline = sub.add_parser("pipeline",help="Executa o pipeline completo (extract → tables → models)")
+    p_pipeline.add_argument("--year-month", help="Período YYYYMM")
+    p_pipeline.add_argument("--months-back", type=int, default=3)
+    p_pipeline.add_argument("--artifact-name", help="Nome do artefato")
+    p_pipeline.set_defaults(func=cmd_pipeline)
+
     return p
+
 
 
 def main():
     parser = build_parser()
     args = parser.parse_args()
     args.func(args)
+ 
+if __name__ == "__main__":
+    main()

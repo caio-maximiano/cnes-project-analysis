@@ -9,6 +9,7 @@ from .cnes.cnes_estabelecimentos_metrics import CnesEstabelecimentosMetrics
 # Modelos
 from .cnes.models.cnes_linear_regression import CnesLinearRegression
 
+#registry.py
 JOBS: Dict[str, Type] = {
     # Tables
     "cnes_servicos": CnesServicos,

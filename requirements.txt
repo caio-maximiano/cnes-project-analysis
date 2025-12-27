@@ -11,3 +11,6 @@ plotly
 # dataprep 
 seaborn
 lightgbm
+pyarrow>=14.0.0
+azure-identity
+azure-storage-file-datalake

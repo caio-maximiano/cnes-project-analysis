@@ -16,6 +16,3 @@ COPY . .
 
 # Cria diretórios de saída
 RUN mkdir -p local_storage/zip local_storage/csv
-
-# Executa o script com parâmetro opcional
-ENTRYPOINT ["python", "extract/extract.py"]

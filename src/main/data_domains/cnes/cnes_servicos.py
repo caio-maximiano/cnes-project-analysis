@@ -3,6 +3,7 @@ import pandas as pd
 from src.main.core.layers.silver import Silver
 
 class CnesServicos(Silver):
+    job_type = "table"
     def __init__(self, year_month: str):
         super().__init__(name="cnes_servicos")
         self.year_month = year_month
